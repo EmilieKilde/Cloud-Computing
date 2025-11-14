@@ -1,0 +1,3 @@
+- Sørg for at docker image og navn i main.tf stemmer overens. terraforming-ccc er den nye inde på googel cloud.
+- Add de resterende medlemmer til den nye terraforming-ccc på gcloud. 
+- Når backend kører skal der laves connection til front-end i main.tf
