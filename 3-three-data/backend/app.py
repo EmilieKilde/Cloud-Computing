@@ -1,6 +1,6 @@
 from __future__ import annotations
 from flask import Flask, request, Response, jsonify
-from google.cloud import logging as gcloud_logging
+import google.cloud.logging as gcloud_logging
 import datetime
 import logging
 import os
@@ -13,7 +13,7 @@ app = Flask(__name__)
 
 "Google cloud logging"
 logging_client = gcloud_logging.Client()
-logging.client.setup_logging
+logging_client.setup_logging
 
 log_name = "flask-app-log"
 cloud_log = logging_client.log(log_name)
