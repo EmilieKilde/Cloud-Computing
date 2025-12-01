@@ -18,7 +18,9 @@ app = Flask(__name__)
 # --- Setup Google Cloud Logging client ---
 logging_client = gcloud_logging.Client()
 log_name = "flask-app-log" # custom log stream name
-log = logging_client.log(log_name)
+logging_client.setup_logging()  # sends standard logging.* to Cloud Logging
+
+log = logging_client.logger("flask-app-log")
 # Examples of how to log
 def log_error(message: str):
     """Write an error log entry to Cloud Logging."""
