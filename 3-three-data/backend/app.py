@@ -78,6 +78,16 @@ def init_db() -> sqlalchemy.engine.base.Engine:
         db = init_connection_pool()
         migrate_db(db)
 
+@app.route("/error", methods=["GET"])
+def error500() -> Response:
+    return log_error("This is a test error message for logging.")
+
+@app.route("/health", methods=["GET"])
+def health() -> Response:
+    return Response(
+        status=200,
+        response=f"Health is good",
+    )
 
 @app.route("/questions", methods=["POST"])
 def add_question() -> Response:
