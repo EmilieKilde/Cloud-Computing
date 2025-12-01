@@ -7,11 +7,11 @@ resource "google_compute_global_address" "private_ip_alloc" {
   purpose       = "VPC_PEERING"
   address_type  = "INTERNAL"
   prefix_length = 16
-  network       = google_compute_network.vpc.id
+  network       = google_compute_network.vpc-backend.id
 }
 
 resource "google_service_networking_connection" "private_vpc_connection" {
-  network                 = google_compute_network.vpc.id
+  network                 = google_compute_network.vpc-backend.id
   service                 = "servicenetworking.googleapis.com"
   reserved_peering_ranges = [google_compute_global_address.private_ip_alloc.name]
 }
@@ -36,15 +36,13 @@ resource "google_sql_database_instance" "instance" {
 
     ip_configuration {
       ipv4_enabled    = false
-      private_network = google_compute_network.vpc.id
+      private_network = google_compute_network.vpc-backend.id
     }
   }
-
-  deletion_protection = true
 }
 
 
-resource "google_cloud_run_service" "service"{
+resource "google_cloud_run_service" "service-backend"{
     name = "cloud-run-service"
     location = "europe-west1"
 
@@ -77,8 +75,30 @@ resource "google_cloud_run_service" "service"{
     }
 }
 
-resource "google_compute_network" "vpc"{
-    name = "vpc"
+resource "google_cloud_run_service" "service-frontend"{
+    name = "cloud-run-service-frontend"
+    location = "europe-west1"
+
+    template{
+        spec{
+            containers{
+                image= "gcr.io/terraforming-ccc/3-data-frontend/frontend"
+            
+                env{
+                    name = "API_ADDRESS"
+                    value = "https://cloud-run-service-57332211562.europe-west1.run.app"
+                }
+            }
+        }
+    }
+}
+
+resource "google_compute_network" "vpc-backend"{
+    name = "vpc-backend"
+    auto_create_subnetworks = false
+}
+resource "google_compute_network" "vpc-frontend"{
+    name = "vpc-frontend"
     auto_create_subnetworks = false
 }
 
@@ -86,7 +106,7 @@ resource "google_compute_subnetwork""subnet" {
     name = "demo-subnet"
     ip_cidr_range = "10.0.0.0/24"
     region = "europe-west1"
-    network = google_compute_network.vpc.id
+    network = google_compute_network.vpc-backend.id
 }
 
 variable "db_password" {
@@ -95,10 +115,20 @@ variable "db_password" {
   sensitive   = true
 }
 
-/*resource "google_vpc_access_connector" "connector"{
-    name = "connector"
+resource "google_vpc_access_connector" "backend-connector"{
+    name = "backend-connector"
     ip_cidr_range = "10.0.1.0/28"
-    network = google_compute_network.vpc.id
+    region = "europe-west1"
+    network = google_compute_network.vpc-backend.id
     min_instances = 2
     max_instances = 3
-}*/
+}
+
+resource "google_vpc_access_connector" "frontend-connector"{
+    name = "frontend-connector"
+    ip_cidr_range = "10.0.2.0/28"
+    region = "europe-west1"
+    network = google_compute_network.vpc-frontend.id
+    min_instances = 2
+    max_instances = 3
+}

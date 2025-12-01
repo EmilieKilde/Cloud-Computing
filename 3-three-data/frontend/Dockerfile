@@ -5,7 +5,7 @@ FROM node:18
 WORKDIR /usr/src/app
 
 # Default API address (embedded at build-time; overrideable at build/run)
-ENV API_ADDRESS=https://data-backend-82745225925.europe-west1.run.app
+ENV API_ADDRESS=https://cloud-run-service-57332211562.europe-west1.run.app
 
 # Copy package.json and package-lock.json to the working directory
 COPY package*.json ./
