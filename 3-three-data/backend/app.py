@@ -135,6 +135,19 @@ def get_questions() -> Response:
             questions.append({"id": row[0], "question": row[1], "answer1": row[2], "answer2": row[3], "answer3": row[4], "answer4": row[5], "correct_answer": row[6], "time_cast": row[7]})
         return questions
 
+@app.route("/questions", methods=["GET"])
+def questions():
+    logging.info(
+        "Questions endpoint called",
+        extra={
+            "json_fields": {
+                "endpoint": "/questions",
+                "event": "questions_request",
+                "method": request.method,
+                "user_agent": request.headers.get("User-Agent")
+            }
+        }
+    )
 
 def save_question(db: sqlalchemy.engine.base.Engine, question: str, answer1: str, answer2: str, answer3: str, answer4: str, correct_answer: int) -> Response:
     """Saves a single question into the database.
