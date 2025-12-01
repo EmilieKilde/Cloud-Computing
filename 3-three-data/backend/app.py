@@ -1,6 +1,8 @@
 from __future__ import annotations
+from email.mime import message
+from importlib.metadata import metadata
 from flask import Flask, request, Response, jsonify
-import google.cloud.logging as gcloud_logging
+from google.cloud import logging as gcloud_logging
 import datetime
 import logging
 import os
@@ -11,19 +13,31 @@ from connect_unix import connect_unix_socket
 
 app = Flask(__name__)
 
-"Google cloud logging"
+
+app = Flask(__name__)
+# --- Setup Google Cloud Logging client ---
 logging_client = gcloud_logging.Client()
-logging_client.setup_logging
-
-log_name = "flask-app-log"
-cloud_log = logging_client.log(log_name)
-
-logger = logging.getLogger()
-
+log_name = "flask-app-log" # custom log stream name
+log = logging_client.log(log_name)
+# Examples of how to log
 def log_error(message: str):
+    """Write an error log entry to Cloud Logging."""
     metadata = {"severity": "ERROR"}
-    entry = cloud_log.entry(metadata, {"message": message})
-    cloud_log.write(entry)
+    entry = log.entry(metadata, {"message": message})
+    log.write(entry)
+
+@app.errorhandler(500)
+def internal_error(e):
+    logging.error(
+    "Internal server error",
+    extra={
+    "json_fields": {
+    "endpoint": request.path,
+    "status": 500,
+    "error": str(e) }
+    }
+    )
+    return {"error": "Internal server error"}, 500
 
 def init_connection_pool() -> sqlalchemy.engine.base.Engine:
     """Sets up connection pool for the app."""
@@ -80,7 +94,10 @@ def init_db() -> sqlalchemy.engine.base.Engine:
 
 @app.route("/error", methods=["GET"])
 def error500() -> Response:
-    return log_error("This is a test error message for logging.")
+    return Response(
+        status=500,
+        response=f"Health is bad",
+    )
 
 @app.route("/health", methods=["GET"])
 def health() -> Response:
