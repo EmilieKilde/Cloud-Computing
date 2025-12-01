@@ -1,5 +1,6 @@
 from __future__ import annotations
-from flask import Flask, request, Response
+from flask import Flask, request, Response, jsonify
+from google.cloud import logging as gcloud_logging
 import datetime
 import logging
 import os
@@ -10,8 +11,19 @@ from connect_unix import connect_unix_socket
 
 app = Flask(__name__)
 
+"Google cloud logging"
+logging_client = gcloud_logging.Client()
+logging.client.setup_logging
+
+log_name = "flask-app-log"
+cloud_log = logging_client.log(log_name)
+
 logger = logging.getLogger()
 
+def log_error(message: str):
+    metadata = {"severity": "ERROR"}
+    entry = cloud_log.entry(metadata, {"message": message})
+    cloud_log.write(entry)
 
 def init_connection_pool() -> sqlalchemy.engine.base.Engine:
     """Sets up connection pool for the app."""
